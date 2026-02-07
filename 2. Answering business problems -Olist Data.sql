@@ -1,11 +1,12 @@
+
 --Answering business problems using the Olist Data Warehouse dataset
 --Olist Ecommerce: Business Problems List
 --1. Customer Cohort Analysis
 --Problem: How do customer cohorts behave over time based on their first purchase month?
---	ï Objective: Track retention and repeat purchase patterns.
---	ï Dataset: orders, customers 
---	ï Analysis type: Cohort analysis & retention
---	ï Example Insight: ìCustomers acquired in January 2025 show 40% repeat purchases after 3 months.î
+--	‚Ä¢ Objective: Track retention and repeat purchase patterns.
+--	‚Ä¢ Dataset: orders, customers 
+--	‚Ä¢ Analysis type: Cohort analysis & retention
+--	‚Ä¢ Example Insight: ‚ÄúCustomers acquired in January 2025 show 40% repeat purchases after 3 months.‚Äù
 	
 	select * ,datediff(month,first_order,order_purchase_timestamp) as rp from(
 	select customer_key,order_purchase_timestamp,
@@ -24,10 +25,10 @@
 
 --2. Customer Lifetime Value (LTV)
 --Problem: What is the historical lifetime value of customers and which segments generate the most revenue?
---	ï Objective: Identify high-value customers for loyalty programs and marketing prioritization.
---	ï Dataset: orders, order_items, customers
---	ï Analysis type: LTV calculation
---	ï Example Insight: ìTop 20% of customers contribute 75% of total revenue.î
+--	‚Ä¢ Objective: Identify high-value customers for loyalty programs and marketing prioritization.
+--	‚Ä¢ Dataset: orders, order_items, customers
+--	‚Ä¢ Analysis type: LTV calculation
+--	‚Ä¢ Example Insight: ‚ÄúTop 20% of customers contribute 75% of total revenue.‚Äù
 	
 	with t as (select o.customer_key,sum(oi.price)as LTV from gold.fact_orders o  join gold.fact_order_items oi on o.order_id=oi.order_id
 	where order_status='delivered' and customer_key is not null
@@ -43,25 +44,25 @@
 
 3. Customer Acquisition Cost (CAC)
 Problem: What is the estimated cost to acquire a new customer?
-	ï Objective: Measure efficiency of acquisition strategies (requires assumptions for marketing spend).
-	ï Dataset: orders, customers + marketing spend assumptions
-	ï Analysis type: CAC = Total marketing spend ˜ # of new customers
-	ï Example Insight: ìEstimated CAC is $5 per customer; LTV/CAC ratio indicates high profitability.î
+	‚Ä¢ Objective: Measure efficiency of acquisition strategies (requires assumptions for marketing spend).
+	‚Ä¢ Dataset: orders, customers + marketing spend assumptions
+	‚Ä¢ Analysis type: CAC = Total marketing spend √∑ # of new customers
+	‚Ä¢ Example Insight: ‚ÄúEstimated CAC is $5 per customer; LTV/CAC ratio indicates high profitability.‚Äù
 
 4. Customer Retention Rate
 Problem: What percentage of customers return for subsequent purchases and how does retention vary across cohorts?
-	ï Objective: Identify churn risk and design retention strategies.
-	ï Dataset: orders, customers
-	ï Analysis type: Retention rate, cohort-based analysis
-	ï Example Insight: ìRetention drops to 20% after 6 months for customers acquired in Q1 2025.î
+	‚Ä¢ Objective: Identify churn risk and design retention strategies.
+	‚Ä¢ Dataset: orders, customers
+	‚Ä¢ Analysis type: Retention rate, cohort-based analysis
+	‚Ä¢ Example Insight: ‚ÄúRetention drops to 20% after 6 months for customers acquired in Q1 2025.‚Äù
 
 
 --5. Forecasting Orders and Revenue
 --Problem: Predict future monthly orders and revenue to optimize inventory and staffing.
---	ï Objective: Support operational planning and supply chain management.
---	ï Dataset: orders, order_items
---	ï Analysis type: Time series forecasting (ARIMA, Prophet, or moving averages)
---	ï Example Insight: ìNext monthís revenue is forecasted to grow 12% based on seasonal trends.î
+--	‚Ä¢ Objective: Support operational planning and supply chain management.
+--	‚Ä¢ Dataset: orders, order_items
+--	‚Ä¢ Analysis type: Time series forecasting (ARIMA, Prophet, or moving averages)
+--	‚Ä¢ Example Insight: ‚ÄúNext month‚Äôs revenue is forecasted to grow 12% based on seasonal trends.‚Äù
 --give growth rate
 with t as (select  year(order_purchase_timestamp) as year ,month(order_purchase_timestamp)as month,sum(price) as revenue
 from gold.fact_orders o join gold.fact_order_items oi on o.order_id=oi.order_id 
@@ -91,10 +92,10 @@ select *,(revenue-previous_month_revenue)/NULLIF(previous_month_revenue, 0) as p
 
 --6. Regional Sales Analysis
 --Problem: Which regions/states generate the highest revenue and number of orders?
---	ï Objective: Optimize marketing campaigns and logistics in high-performing regions.
---	ï Dataset: customers, orders, geolocation
---	ï Analysis type: Descriptive, geospatial
---	ï Example Insight: ìS„o Paulo and Rio de Janeiro contribute 50% of total revenue.î
+--	‚Ä¢ Objective: Optimize marketing campaigns and logistics in high-performing regions.
+--	‚Ä¢ Dataset: customers, orders, geolocation
+--	‚Ä¢ Analysis type: Descriptive, geospatial
+--	‚Ä¢ Example Insight: ‚ÄúS√£o Paulo and Rio de Janeiro contribute 50% of total revenue.‚Äù
 with t as (
 select c.customer_state,count(distinct o.order_id)as no_of_orders,
 sum(oi.price) as revenue from gold.fact_orders o join gold.fact_order_items oi on o.order_id=oi.order_id join
@@ -107,10 +108,10 @@ select *,100 * revenue/sum(revenue) over () as pct_revenue from t order by pct_r
 
 --7. Product & Category Performance
 --Problem: Identify best-selling products and categories, and products with high returns or low reviews.
---	ï Objective: Improve inventory decisions, reduce returns, and enhance product quality.
---	ï Dataset: products, order_items, reviews
---	ï Analysis type: Descriptive & diagnostic
---	ï Example Insight: ìElectronics category drives 35% of revenue but has 12% negative reviews.î
+--	‚Ä¢ Objective: Improve inventory decisions, reduce returns, and enhance product quality.
+--	‚Ä¢ Dataset: products, order_items, reviews
+--	‚Ä¢ Analysis type: Descriptive & diagnostic
+--	‚Ä¢ Example Insight: ‚ÄúElectronics category drives 35% of revenue but has 12% negative reviews.‚Äù
 with t as (
 select p.product_category,count( distinct o.order_id)as order_count, sum(oi.price) as revenue_by_product, COUNT(*) AS units_sold  
 from  gold.fact_orders o join gold.fact_order_items oi on o.order_id=oi.order_id 
@@ -139,9 +140,10 @@ from t order by revenue_by_product desc
 --This is the key business insight.
 
 --?? Business interpretation (this is what matters)
---? Insight 1 ó Revenue concentration
+--? Insight 1 ‚Äî Revenue concentration
 --Very few categories drive most revenue:
---~20% categories ? 80% revenue
+--~20% categories ? 80% revenue
+
 --Classic Pareto behavior.
 --Meaning:
 --?? business is dependent on few categories
@@ -149,10 +151,10 @@ from t order by revenue_by_product desc
 
 --8. Delivery Performance Analysis
 --Problem: Which sellers or regions experience the longest delivery times?
---	ï Objective: Identify logistics bottlenecks and improve delivery efficiency.
---	ï Dataset: orders, sellers, geolocation
---	ï Analysis type: Diagnostic, geospatial
---	ï Example Insight: ìOrders to the North region take 20% longer than the national average.î
+--	‚Ä¢ Objective: Identify logistics bottlenecks and improve delivery efficiency.
+--	‚Ä¢ Dataset: orders, sellers, geolocation
+--	‚Ä¢ Analysis type: Diagnostic, geospatial
+--	‚Ä¢ Example Insight: ‚ÄúOrders to the North region take 20% longer than the national average.‚Äù
 
 select s.seller_state,
 count(distinct oi.order_id) as total_orders,
@@ -170,10 +172,10 @@ group by s.seller_state
 
 9. Impact of Delivery on Customer Satisfaction
 Problem: Does delivery delay affect customer review scores?
-	ï Objective: Correlate operational performance with customer satisfaction.
-	ï Dataset: orders, reviews
-	ï Analysis type: Correlation analysis
-	ï Example Insight: ìOrders delayed >7 days receive 1.5 points lower on average in reviews.î
+	‚Ä¢ Objective: Correlate operational performance with customer satisfaction.
+	‚Ä¢ Dataset: orders, reviews
+	‚Ä¢ Analysis type: Correlation analysis
+	‚Ä¢ Example Insight: ‚ÄúOrders delayed >7 days receive 1.5 points lower on average in reviews.‚Äù
 WITH review_per_order AS (
     SELECT 
         order_id,
@@ -203,44 +205,44 @@ as category_days_late ,_score from t)
 select category_days_late ,avg(_score)as review_score from category group by category_days_late order by avg(_score) asc
 
 Negative correlation
-ìCustomer satisfaction declines sharply with delivery delays. Orders delivered on time receive an average rating of 4, while highly delayed deliveries receive only 1. Each delay bucket reduces ratings by ~1 point.î
+‚ÄúCustomer satisfaction declines sharply with delivery delays. Orders delivered on time receive an average rating of 4, while highly delayed deliveries receive only 1. Each delay bucket reduces ratings by ~1 point.‚Äù
 
 
 10. Market Basket Analysis (Optional)
 Problem: Which products are frequently bought together?
-	ï Objective: Recommend product bundles and improve cross-selling strategies.
-	ï Dataset: order_items
-	ï Analysis type: Association rules, frequent itemset mining
-	ï Example Insight: ìCustomers who buy smartphone cases also buy screen protectors 60% of the time.î
+	‚Ä¢ Objective: Recommend product bundles and improve cross-selling strategies.
+	‚Ä¢ Dataset: order_items
+	‚Ä¢ Analysis type: Association rules, frequent itemset mining
+	‚Ä¢ Example Insight: ‚ÄúCustomers who buy smartphone cases also buy screen protectors 60% of the time.‚Äù
 
 11. Seasonality & Trends
 Problem: Are there seasonal trends in orders or revenue?
-	ï Objective: Prepare for peak sales periods like holidays.
-	ï Dataset: orders, order_items
-	ï Analysis type: Time series & trend analysis
-	ï Example Insight: ìBlack Friday week sees a 2x increase in orders compared to the monthly average.î
+	‚Ä¢ Objective: Prepare for peak sales periods like holidays.
+	‚Ä¢ Dataset: orders, order_items
+	‚Ä¢ Analysis type: Time series & trend analysis
+	‚Ä¢ Example Insight: ‚ÄúBlack Friday week sees a 2x increase in orders compared to the monthly average.‚Äù
 
 ? Portfolio Coverage Check:
-	ï Cohorts: ? Problem 1
-	ï LTV: ? Problem 2
-	ï CAC: ? Problem 3 (assumed)
-	ï Retention: ? Problem 4
-	ï Forecasting: ? Problem 5
-	ï Other business insights: ? Problems 6ñ11
+	‚Ä¢ Cohorts: ? Problem 1
+	‚Ä¢ LTV: ? Problem 2
+	‚Ä¢ CAC: ? Problem 3 (assumed)
+	‚Ä¢ Retention: ? Problem 4
+	‚Ä¢ Forecasting: ? Problem 5
+	‚Ä¢ Other business insights: ? Problems 6‚Äì11
 
-If you want, I can now turn this into a full ìproject roadmapî, mapping each business problem to EDA steps, charts/visualizations, and Python/SQL analysis approaches, so you can literally start building your portfolio step by step.
+If you want, I can now turn this into a full ‚Äúproject roadmap‚Äù, mapping each business problem to EDA steps, charts/visualizations, and Python/SQL analysis approaches, so you can literally start building your portfolio step by step.
 Do you want me to do that next?
 
 From <https://chatgpt.com/c/697870ed-11b8-839a-9483-82e808b43e70> 
 
 
-Excellent ó this is exactly how senior data analysts frame portfolio projects.
+Excellent ‚Äî this is exactly how senior data analysts frame portfolio projects.
 You already have the analyses.
-Now weíll convert each one into proper business storytelling format like:
+Now we‚Äôll convert each one into proper business storytelling format like:
 	Business Problem ? Approach ? Insight ? Recommendation
 This makes your project look business-driven, not academic.
 
-? Olist Portfolio ó Business Framing (Professional Version)
+? Olist Portfolio ‚Äî Business Framing (Professional Version)
 
 1. Customer Cohort Analysis (Retention over time)
 Business Problem:
@@ -248,7 +250,7 @@ Customer churn is increasing and repeat purchases are low. We need to understand
 Approach:
 Conducted monthly cohort analysis by grouping customers based on their first purchase month and tracking repeat purchases over time.
 Insight:
-Only 25ñ30% of customers return after 3 months, with sharp drop-offs after the first purchase.
+Only 25‚Äì30% of customers return after 3 months, with sharp drop-offs after the first purchase.
 Recommendation:
 Introduce loyalty discounts, email reminders, and personalized offers within the first 60 days to improve early retention.
 
@@ -298,7 +300,7 @@ Marketing and logistics budgets are spread evenly without knowing which regions 
 Approach:
 Analyzed revenue and order volume by state and city using customer geolocation data.
 Insight:
-S„o Paulo and Rio de Janeiro contribute nearly 50% of total revenue.
+S√£o Paulo and Rio de Janeiro contribute nearly 50% of total revenue.
 Recommendation:
 Prioritize warehouses, faster shipping, and targeted ads in high-performing regions.
 
@@ -328,7 +330,7 @@ Low review scores may be driven by operational issues rather than product qualit
 Approach:
 Correlated delivery delays with customer review ratings.
 Insight:
-Orders delayed >7 days receive 1ñ1.5 points lower ratings on average.
+Orders delayed >7 days receive 1‚Äì1.5 points lower ratings on average.
 Recommendation:
 Prioritize faster delivery for high-value orders and proactively notify customers of delays.
 
@@ -348,17 +350,18 @@ Sales fluctuate throughout the year, causing stockouts in peak periods and exces
 Approach:
 Analyzed monthly and weekly sales trends to identify seasonal patterns.
 Insight:
-Black Friday and holiday periods show 2xñ3x order spikes.
+Black Friday and holiday periods show 2x‚Äì3x order spikes.
 Recommendation:
 Plan promotions, inventory, and staffing ahead of peak seasons to maximize revenue.
 
 ? Why this format is powerful for your portfolio
 This structure shows recruiters:
-	ï Business thinking ?
-	ï Analytical skills ?
-	ï Actionable recommendations ?
-	ï Not just ìplots and chartsî ?
+	‚Ä¢ Business thinking ?
+	‚Ä¢ Analytical skills ?
+	‚Ä¢ Actionable recommendations ?
+	‚Ä¢ Not just ‚Äúplots and charts‚Äù ?
 
 If you want, next I can help you turn these into README/project report sections or resume bullet points, which is the final step to make your Olist project look industry-level.
+
 
 
